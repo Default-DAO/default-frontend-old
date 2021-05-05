@@ -7,7 +7,7 @@ import { store } from './store'
 
 // HTTP Client
 import Axios from 'axios';
-Axios.defaults.baseURL = 'http://localhost:8003/api';
+Axios.defaults.baseURL = 'http://localhost:8000/api';
 Vue.prototype.$http = Axios;
 Vuex.Store.prototype.$http = Axios;
 
@@ -26,6 +26,8 @@ Vuex.Store.prototype.$ethers = Ethers;
 
 // Misc
 Vue.config.productionTip = false;
+
+Vue.mixin({ methods: { copy(value) { return JSON.parse(JSON.stringify(value)); }}})
 
 new Vue({
   render: h => h(App),

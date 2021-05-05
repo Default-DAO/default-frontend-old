@@ -4,6 +4,8 @@ export default {
   state: () => ({
 		profile: null,
     userState: USER_STATE.ghost,
+
+    ready: false,
   }),
 
 	getters: {
@@ -12,6 +14,9 @@ export default {
     },
     userState (state) {
       return state.userState;
+    },
+    ready (state) {
+      return state.ready;
     },
 	},
 
@@ -29,7 +34,7 @@ export default {
         const profile = result.apiMember;
         commit('updateProfile', profile);
 
-        if (profile.alias == null || profile.alias == '') {
+        if (!profile.claimed) {
           console.log('unclaimed!')
           commit('updateUserState', USER_STATE.pending);
         } else {
@@ -43,6 +48,8 @@ export default {
         } else {
           console.error(error);
         }
+      } finally {
+        commit('updateReady', true);
       }
     },
     async claimMembership ({ dispatch, commit }, alias) {
@@ -74,6 +81,9 @@ export default {
     },
     updateUserState (state, userState) {
       state.userState = userState;
+    },
+    updateReady (state, ready) {
+      state.ready = ready;
     },
   },
 }

@@ -28,7 +28,7 @@ export default {
   data() {
     return {
       pages: [
-        { id: '/clout', title: 'Clout' },
+        { id: '/stake', title: 'Stake' },
         { id: '/value', title: 'Value' },
         { id: '/pool', title: 'Pool' },
       ],
@@ -56,7 +56,8 @@ export default {
   padding: 16px;
   box-sizing: border-box;
 
-  position: relative;
+  z-index: 100;
+  position: fixed;
 }
 
 /* Nav Bar */

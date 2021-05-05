@@ -1,7 +1,9 @@
 <template>
   <div id="app">
     <Header />
-    <router-view></router-view>
+    <div class="router-wrapper">
+      <router-view></router-view>
+    </div>
     <Web3Manager />
   </div>
 </template>
@@ -19,6 +21,12 @@ export default {
 </script>
 
 <style>
+
+/* Router Styling */
+.router-wrapper {
+  height: calc(100% - 72px);
+  margin-top: 72px;
+}
 
 /* Fonts */
 @font-face {
@@ -86,12 +94,28 @@ h5 {
 h1, h2, h3, h4, h5 {
   color: #ffffff;
   margin: 0;
+  
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Buttons */
 .button-p {
   border-radius: 8px;
   background-color: var(--p1);
+  box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.25);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.button-s {
+  border-radius: 8px;
+  background-color: var(--s4);
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.25);
 
   display: flex;
@@ -110,9 +134,9 @@ h1, h2, h3, h4, h5 {
   --s1: #000000;
   --s2: #111111;
   --s3: #222222;
-  --s4: #505050;
+  --s4: #303030;
   --s5: #505050;
-  --s6: #505050;
+  --s6: #979797;
 }
 
 /* App */
@@ -129,6 +153,16 @@ h1, h2, h3, h4, h5 {
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+input {
+  font-family: "CircularXX TT";
+  font-weight: 700;
+  font-size: 15px;
+
+  -webkit-appearance: none;
+  border: none;
+  outline: none;
 }
 
 </style>

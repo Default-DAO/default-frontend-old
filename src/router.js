@@ -1,13 +1,13 @@
 import VueRouter from 'vue-router';
 
-import { Register, Clout, Value, Pool } from '@/pages';
+import { Register, Stake, Value, Pool } from '@/pages';
 
 const routes = [
   // Register
   { path: '/', component: Register },
 
   // Pages
-  { path: '/clout', component: Clout },
+  { path: '/stake', component: Stake },
   { path: '/value', component: Value },
   { path: '/pool', component: Pool },
 
