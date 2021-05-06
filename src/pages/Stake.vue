@@ -1,5 +1,5 @@
 <template>
-  <div class="value-wrapper">
+  <div class="stake-wrapper">
     <div class="column">
       <h2 class="no-collapse">To</h2>
       <input class="search-input no-collapse"
@@ -10,17 +10,17 @@
         <div v-if="searchInputTo.length == 0"
              style="width: 100%;">
           <div class="member"
-               v-for="allocation in allocationsTo"
+               v-for="delegation in delegationsTo"
 
-               :key="allocation.toTxMember.ethAddress">
+               :key="delegation.toTxMember.ethAddress">
             <div class="member-pic" />
             <div class="member-info">
-              <h4>{{ allocation.toTxMember.alias }}</h4>
+              <h4>{{ delegation.toTxMember.alias }}</h4>
             </div>
             <input class="member-weight"
                    type="text"
                    onClick="this.select();"
-                   v-model="allocation.weight"
+                   v-model="delegation.weight"
                    v-if="userState == USER_STATE.claimed" />
           </div>
         </div>
@@ -35,10 +35,10 @@
             </div>
             <div class="member-add button-p"
                  @click="addMember(member)"
-                 v-if="!allocationsTo.find(allocation => allocation.toTxMember.alias == member.alias)">
+                 v-if="!delegationsTo.find(delegation => delegation.toTxMember.alias == member.alias)">
               <h5>Add</h5>
             </div>
-            <h5 v-if="allocationsTo.find(allocation => allocation.toTxMember.alias == member.alias)">Added!</h5>
+            <h5 v-if="delegationsTo.find(delegation => delegation.toTxMember.alias == member.alias)">Added!</h5>
           </div>
         </div>
       </div>
@@ -62,12 +62,12 @@
       <div class="members">
         <div style="width: 100%;">
           <div class="member"
-               v-for="allocation in displayedAllocationsFrom"
+               v-for="delegation in displayedDelegationsFrom"
 
-               :key="allocation.fromTxMember.ethAddress">
+               :key="delegation.fromTxMember.ethAddress">
             <div class="member-pic" />
             <div class="member-info">
-              <h4>{{ allocation.fromTxMember.alias }}</h4>
+              <h4>{{ delegation.fromTxMember.alias }}</h4>
             </div>
           </div>
         </div>
@@ -80,13 +80,13 @@
 import { USER_STATE } from '@/constants';
 
 export default {
-  name: 'Value',
+  name: 'Stake',
   data() {
     return {
       members: [],
-      initialAllocationsTo: [],
-      allocationsTo: [],
-      allocationsFrom: [],
+      initialDelegationsTo: [],
+      delegationsTo: [],
+      delegationsFrom: [],
 
       searchInputTo: '',
       searchInputFrom: '',
@@ -100,18 +100,18 @@ export default {
     userState() { return this.$store.getters.userState; },
     USER_STATE() { return USER_STATE },
 
-    /* Allocations */
+    /* Delegations */
     searchedMembersTo() {
       if (this.searchInputTo.length == 0) { return []; }
       return this.members.filter(member => member.alias.toLowerCase().startsWith(this.searchInputTo.toLowerCase()));
     },
-    displayedAllocationsFrom() {
-      return this.allocationsFrom.filter(allocation => allocation.fromTxMember.alias.toLowerCase().startsWith(this.searchInputFrom.toLowerCase()));
+    displayedDelegationsFrom() {
+      return this.delegationsFrom.filter(delegation => delegation.fromTxMember.alias.toLowerCase().startsWith(this.searchInputFrom.toLowerCase()));
     },
 
     // Save changes
     changesMade() {
-      return !(JSON.stringify(this.initialAllocationsTo) == JSON.stringify(this.allocationsTo));
+      return !(JSON.stringify(this.initialDelegationsTo) == JSON.stringify(this.delegationsTo));
     }
   },
   watch: { ready() { this.init(); } },
@@ -121,7 +121,7 @@ export default {
       if (!this.ready) { return; }
 
       this.getMembers();
-      this.getValueAllocations();
+      this.getStakeDelegations();
     },
     async getMembers() {
       try {
@@ -135,17 +135,17 @@ export default {
         console.error(err)
       }
     },
-    async getValueAllocations() {
+    async getStakeDelegations() {
       try {
         const ethAddress = this.$ethers.utils.getAddress(this.account);
         const urlParams = new URLSearchParams({ ethAddress, page: 0 });
 
-        const { data: { result } } = await this.$http.get('/txValueAllocation?' + urlParams);
+        const { data: { result } } = await this.$http.get('/txStakeDelegation?' + urlParams);
         if (result.error) { throw result.errorCode; }
 
-        this.initialAllocationsTo = this.copy(result.allocationsTo);
-        this.allocationsTo = this.copy(result.allocationsTo);
-        this.allocationsFrom = this.copy(result.allocationsFrom);
+        this.initialDelegationsTo = this.copy(result.delegationsTo);
+        this.delegationsTo = this.copy(result.delegationsTo);
+        this.delegationsFrom = this.copy(result.delegationsFrom);
       } catch (err) {
         console.error(err)
       }
@@ -153,41 +153,41 @@ export default {
     addMember(member) {
       this.searchInputTo = '';
 
-      const allocation = {
+      const delegation = {
         fromEthAddress: this.$ethers.utils.getAddress(this.account),
         toEthAddress: member.ethAddress,
         weight: 0,
 
         toTxMember: member,
       }
-      this.allocationsTo.unshift(allocation);
+      this.delegationsTo.unshift(delegation);
     },
     async saveChanges() {
       try {
-        // Sanitize allocation data
-        let allocations = this.copy(this.allocationsTo);
-        for (let allocation of allocations) {
-          const weight = parseInt(allocation.weight);
+        // Sanitize delegation data
+        let delegations = this.copy(this.delegationsTo);
+        for (let delegation of delegations) {
+          const weight = parseInt(delegation.weight);
           if (Number.isNaN(weight)) { throw "Invalid weight inputs." }
 
-          allocation.weight = weight;
-          delete allocation.toTxMember;
+          delegation.weight = weight;
+          delete delegation.toTxMember;
         }
 
         // Send to backend
         const { signature, ethAddress, chainId } = await this.$store.dispatch('generateSignedMessage');
 
-        const { data: { result } } = await this.$http.post('/txValueAllocation/send', { ethAddress, signature, chainId, allocations });
+        const { data: { result } } = await this.$http.post('/txStakeDelegation/send', { ethAddress, signature, chainId, delegations });
         if (result.error) { throw result.errorCode; }
 
-        this.initialAllocationsTo = this.copy(this.allocationsTo);
+        this.initialDelegationsTo = this.copy(this.delegationsTo);
       } catch (error) {
         console.error(error);
       }
     },
     discardChanges() {
       this.searchInputTo = '';
-      this.allocationsTo = this.copy(this.initialAllocationsTo);
+      this.delegationsTo = this.copy(this.initialDelegationsTo);
     },
   },
 }
@@ -195,7 +195,7 @@ export default {
 
 <style scoped>
 
-.value-wrapper {
+.stake-wrapper {
   width: 100%;
   height: 100%;
 

@@ -1,5 +1,5 @@
-import Header from './Header'
-import Web3Manager from './Web3Manager'
+import Header from './Header/Header'
+import Web3Manager from './Web3Manager/Web3Manager'
 
 export {
   Header,

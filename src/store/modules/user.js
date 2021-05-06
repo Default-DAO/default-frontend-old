@@ -4,6 +4,8 @@ export default {
   state: () => ({
 		profile: null,
     userState: USER_STATE.ghost,
+
+    ready: false,
   }),
 
 	getters: {
@@ -12,6 +14,9 @@ export default {
     },
     userState (state) {
       return state.userState;
+    },
+    ready (state) {
+      return state.ready;
     },
 	},
 
@@ -29,20 +34,19 @@ export default {
         const profile = result.apiMember;
         commit('updateProfile', profile);
 
-        if (profile.alias == null || profile.alias == '') {
-          console.log('unclaimed!')
+        if (!profile.claimed) {
           commit('updateUserState', USER_STATE.pending);
         } else {
-          console.log('claimed!')
           commit('updateUserState', USER_STATE.claimed);
         }
       } catch (error) {
         if (error === ERROR_CODES.not_whitelisted) {
-          console.log('not whitelisted!')
           commit('updateUserState', USER_STATE.not_whitelisted);
         } else {
           console.error(error);
         }
+      } finally {
+        commit('updateReady', true);
       }
     },
     async claimMembership ({ dispatch, commit }, alias) {
@@ -52,15 +56,12 @@ export default {
         const { data: { result } } = await this.$http.post('/profile/claim', { ethAddress, signature, chainId, alias });
         if (result.error) { throw result.errorCode; }
 
-        console.log(result)
-        console.log('claimed!')
-
         const profile = result.apiMember;
         commit('updateProfile', profile);
         commit('updateUserState', USER_STATE.claimed);
       } catch (error) {
         if (error === ERROR_CODES.already_claimed) {
-          console.log('already claimed!');
+          console.error('already claimed!');
         } else {
           console.error(error);
         }
@@ -74,6 +75,9 @@ export default {
     },
     updateUserState (state, userState) {
       state.userState = userState;
+    },
+    updateReady (state, ready) {
+      state.ready = ready;
     },
   },
 }

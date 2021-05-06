@@ -1,11 +1,11 @@
 import Register from './Register'
-import Clout from './Clout'
+import Stake from './Stake'
 import Value from './Value'
 import Pool from './Pool'
 
 export {
   Register,
-  Clout,
+  Stake,
   Value,
   Pool
 }

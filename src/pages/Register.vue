@@ -15,17 +15,19 @@
 
     <input class="alias-input"
            type="text"
+           placeholder="Enter alias"
            v-model="aliasInput"
-           v-if="userState == USER_STATE.pending"/>
+           v-if="userState == USER_STATE.pending"
+           v-on:keyup.enter="$store.dispatch('claimMembership', aliasInput)" />
     <div class="button-p"
          :class="{ 'button-disabled': aliasInput == '' }"
-         @click="$store.dispatch('claimMembership', aliasInput);"
+         @click="$store.dispatch('claimMembership', aliasInput)"
          v-if="userState == USER_STATE.pending">
       <h4>Claim</h4>
     </div>
 
     <div class="button-p"
-         @click="$router.push('clout')"
+         @click="$router.push('stake')"
          v-if="userState == USER_STATE.claimed">
       <h4>Enter App</h4>
     </div>
@@ -45,16 +47,6 @@ export default {
   computed: {
     userState() { return this.$store.getters.userState; },
     USER_STATE() { return USER_STATE },
-
-    profile() { return this.$store.getters.profile; },
-  },
-  watch: {
-    profile: {
-      handler() {
-
-      },
-      immediate: true
-    },
   },
 }
 </script>
@@ -94,8 +86,7 @@ export default {
 
   box-sizing: border-box;
   border-radius: 8px;
-  outline: none;
-  border: none;
+  border: 2px solid var(--s3);
 }
 
 </style>

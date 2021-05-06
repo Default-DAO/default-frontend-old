@@ -1,17 +1,17 @@
 <template>
-  <div class="clout-wrapper">
+  <div class="stake-wrapper">
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Clout',
+  name: 'Stake',
 }
 </script>
 
 <style scoped>
 
-.clout-wrapper {
+.stake-wrapper {
   width: 100%;
   height: 100%;
 
