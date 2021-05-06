@@ -56,6 +56,8 @@ export default {
   padding: 16px;
   box-sizing: border-box;
 
+  background-color: var(--s2);
+
   z-index: 100;
   position: fixed;
 }

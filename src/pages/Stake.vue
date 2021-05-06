@@ -1,16 +1,16 @@
 <template>
   <div class="stake-wrapper">
     <div class="column">
-      <h2>To</h2>
-      <input class="search-input"
+      <h2 class="no-collapse">To</h2>
+      <input class="search-input no-collapse"
              type="text"
              placeholder="Search alias"
-             v-model="searchInput" />
+             v-model="searchInputTo" />
       <div class="members">
-        <div v-if="searchInput.length == 0"
+        <div v-if="searchInputTo.length == 0"
              style="width: 100%;">
           <div class="member"
-               v-for="delegation in delegations"
+               v-for="delegation in delegationsTo"
 
                :key="delegation.toTxMember.ethAddress">
             <div class="member-pic" />
@@ -27,7 +27,7 @@
 
         <div style="width: 100%;">
           <div class="member"
-               v-for="member in searchedMembers"
+               v-for="member in searchedMembersTo"
                :key="member.ethAddress">
             <div class="member-pic" />
             <div class="member-info">
@@ -35,10 +35,10 @@
             </div>
             <div class="member-add button-p"
                  @click="addMember(member)"
-                 v-if="!delegations.find(delegation => delegation.toTxMember.alias == member.alias)">
+                 v-if="!delegationsTo.find(delegation => delegation.toTxMember.alias == member.alias)">
               <h5>Add</h5>
             </div>
-            <h5 v-if="delegations.find(delegation => delegation.toTxMember.alias == member.alias)">Added!</h5>
+            <h5 v-if="delegationsTo.find(delegation => delegation.toTxMember.alias == member.alias)">Added!</h5>
           </div>
         </div>
       </div>
@@ -54,7 +54,24 @@
       </div>
     </div>
     <div class="column">
-      <h2>From</h2>
+      <h2 class="no-collapse">From</h2>
+      <input class="search-input no-collapse"
+             type="text"
+             placeholder="Search alias"
+             v-model="searchInputFrom" />
+      <div class="members">
+        <div style="width: 100%;">
+          <div class="member"
+               v-for="delegation in displayedDelegationsFrom"
+
+               :key="delegation.fromTxMember.ethAddress">
+            <div class="member-pic" />
+            <div class="member-info">
+              <h4>{{ delegation.fromTxMember.alias }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -67,36 +84,42 @@ export default {
   data() {
     return {
       members: [],
-      initialDelegations: [],
-      delegations: [],
+      initialDelegationsTo: [],
+      delegationsTo: [],
+      delegationsFrom: [],
 
-      searchInput: '',
+      searchInputTo: '',
+      searchInputFrom: '',
     }
   },
   computed: {
     ready() { return this.$store.getters.ready; },
 
+    // Account
     account() { return this.$store.getters.account; },
-
     userState() { return this.$store.getters.userState; },
     USER_STATE() { return USER_STATE },
 
     /* Delegations */
-    searchedMembers() {
-      if (this.searchInput.length == 0) { return []; }
-
-      return this.members.filter(member => member.alias.toLowerCase().startsWith(this.searchInput.toLowerCase()));
+    searchedMembersTo() {
+      if (this.searchInputTo.length == 0) { return []; }
+      return this.members.filter(member => member.alias.toLowerCase().startsWith(this.searchInputTo.toLowerCase()));
+    },
+    displayedDelegationsFrom() {
+      return this.delegationsFrom.filter(delegation => delegation.fromTxMember.alias.toLowerCase().startsWith(this.searchInputFrom.toLowerCase()));
     },
 
+    // Save changes
     changesMade() {
-      return !(this.sameElements(this.initialDelegations, this.delegations));
+      return !(JSON.stringify(this.initialDelegationsTo) == JSON.stringify(this.delegationsTo));
     }
   },
-  watch: {
-    ready() { this.init(); },
-  },
+  watch: { ready() { this.init(); } },
+  mounted() { this.init(); },
   methods: {
     init() {
+      if (!this.ready) { return; }
+
       this.getMembers();
       this.getStakeDelegations();
     },
@@ -108,29 +131,27 @@ export default {
         if (result.error) { throw result.errorCode; }
 
         this.members = result.members;
-        console.log(this.members);
       } catch (err) {
         console.error(err)
       }
     },
     async getStakeDelegations() {
       try {
-        const fromEthAddress = this.$ethers.utils.getAddress(this.account);
-        const urlParams = new URLSearchParams({ fromEthAddress, page: 0 });
+        const ethAddress = this.$ethers.utils.getAddress(this.account);
+        const urlParams = new URLSearchParams({ ethAddress, page: 0 });
 
         const { data: { result } } = await this.$http.get('/txStakeDelegation?' + urlParams);
         if (result.error) { throw result.errorCode; }
 
-        this.initialDelegations = this.copy(result.stakeDelegations);
-        this.delegations = this.copy(result.stakeDelegations);
-        console.log(this.initialDelegations, this.delegations)
+        this.initialDelegationsTo = this.copy(result.delegationsTo);
+        this.delegationsTo = this.copy(result.delegationsTo);
+        this.delegationsFrom = this.copy(result.delegationsFrom);
       } catch (err) {
         console.error(err)
       }
     },
     addMember(member) {
-      console.log(this.account, member.ethAddress)
-      this.searchInput = '';
+      this.searchInputTo = '';
 
       const delegation = {
         fromEthAddress: this.$ethers.utils.getAddress(this.account),
@@ -139,25 +160,19 @@ export default {
 
         toTxMember: member,
       }
-      this.delegations.unshift(delegation);
+      this.delegationsTo.unshift(delegation);
     },
     async saveChanges() {
       try {
         // Sanitize delegation data
-        let delegations = this.copy(this.delegations);
+        let delegations = this.copy(this.delegationsTo);
         for (let delegation of delegations) {
           const weight = parseInt(delegation.weight);
           if (Number.isNaN(weight)) { throw "Invalid weight inputs." }
 
           delegation.weight = weight;
           delete delegation.toTxMember;
-
-          // TODO - get rid of these, only adding to make it work w/ backend
-          delegation.epoch = 0;
-          delegation.amount = 0;
         }
-
-        console.log(delegations)
 
         // Send to backend
         const { signature, ethAddress, chainId } = await this.$store.dispatch('generateSignedMessage');
@@ -165,32 +180,14 @@ export default {
         const { data: { result } } = await this.$http.post('/txStakeDelegation/send', { ethAddress, signature, chainId, delegations });
         if (result.error) { throw result.errorCode; }
 
-        console.log(result)
-        console.log('delegations saved!')
+        this.initialDelegationsTo = this.copy(this.delegationsTo);
       } catch (error) {
         console.error(error);
       }
     },
     discardChanges() {
-      this.searchInput = '';
-      this.delegations = this.copy(this.initialDelegations);
-    },
-
-    sameElements(arr1, arr2) {
-      if (arr1 == null || arr2 == null || !Array.isArray(arr1) || !Array.isArray(arr2)) {
-        return false;
-      } else if (arr1.length !== arr2.length) {
-        return false;
-      } else if (arr1.length === 0) {
-        return true;
-      } else {
-        for (let el of arr1) {
-          if (!arr2.includes(el)) {
-            return false;
-          }
-        }
-        return true;
-      }
+      this.searchInputTo = '';
+      this.delegationsTo = this.copy(this.initialDelegationsTo);
     },
   },
 }
@@ -235,6 +232,8 @@ export default {
 .members {
   width: 100%;
   margin-top: 32px;
+
+  overflow: scroll;
 
   display: flex;
   flex-direction: column;

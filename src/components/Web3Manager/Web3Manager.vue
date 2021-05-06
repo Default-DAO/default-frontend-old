@@ -40,19 +40,6 @@ export default {
 
       // Check for membership
       this.$store.dispatch('isMember');
-
-      // Test backend
-      // try {
-      //   const fromEthAddress = this.$ethers.utils.getAddress(this.account);
-      //   const toEthAddress = fromEthAddress.substring(0, fromEthAddress.length - 1) + '1';
-      //   const weight = 2;
-      //
-      //   const { data: { result } } = await this.$http.post('/txValueAllocation/send?', { fromEthAddress, toEthAddress, weight });
-      //   if (result.error) { throw result.errorCode; }
-      //   console.log(result)
-      // } catch (error) {
-      //   console.error(error)
-      // }
     },
 		chainChanged(chainId) {
 			chainId = parseInt(chainId, 16); // hex to int

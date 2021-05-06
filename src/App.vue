@@ -94,7 +94,7 @@ h5 {
 h1, h2, h3, h4, h5 {
   color: #ffffff;
   margin: 0;
-  
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -123,6 +123,11 @@ h1, h2, h3, h4, h5 {
   justify-content: center;
 
   cursor: pointer;
+}
+
+/* Flexbox */
+.no-collapse {
+  flex-shrink: 0;
 }
 
 /* Colors */
